@@ -1,0 +1,71 @@
+//SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract Bank{
+    mapping (address=>uint256) private balances;
+
+    function deposit() public payable{
+        require(msg.value>0,"Amount should be greater than 0");
+        balances[msg.sender]+=msg.value;
+    }
+    function withraw(uint256 amt) public{
+        require(balances[msg.sender]>=amt,"Insufficient Balance");
+        
+        balances[msg.sender]-=amt;
+        (bool sent,)=payable(msg.sender).call{value:amt}("");
+        require(sent,"Transfer Failed");
+    }
+    function transfer(address payable recepient,uint256 amt) public {
+        require(balances[msg.sender]>=amt,"Insufficient Balance");
+        balances[msg.sender]-=amt;
+        (bool sent, ) = recepient.call{value: amt}("");
+    require(sent, "Transfer failed");
+
+
+    }
+    function showBalance() public view returns(uint256){
+        return balances[msg.sender];
+    }
+}
+
+
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract StudentData {
+    struct Student {
+        uint256 id;
+        string name;
+        uint8 age;
+        string course;
+    }
+
+    Student[] private students;
+
+    event StudentAdded(uint256 id, string name, string course);
+    event FallbackCalled(address sender, uint value, string message);
+
+    function addStudent(uint256 _id, string memory _name, uint8 _age, string memory _course) public {
+        students.push(Student(_id, _name, _age, _course));
+        emit StudentAdded(_id, _name, _course);
+    }
+
+    function getStudent(uint256 index) public view returns (uint256, string memory, uint8, string memory) {
+        require(index < students.length, "Invalid index");
+        Student memory s = students[index];
+        return (s.id, s.name, s.age, s.course);
+    }
+
+    function getTotalStudents() public view returns (uint256) {
+        return students.length;
+    }
+
+    fallback() external payable {
+        emit FallbackCalled(msg.sender, msg.value, "Fallback function triggered!");
+    }
+
+    receive() external payable {
+        emit FallbackCalled(msg.sender, msg.value, "Receive function triggered!");
+    }
+}
